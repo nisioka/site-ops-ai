@@ -1,20 +1,20 @@
 {
   "name": "site-ops-ai",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "GA4 + Search Console のデータを収集し、AI が修正提案を出す運用ツール（複数サイト汎用）",
+  "description": "GA4 + Search Console の計測データを収集し、AI がサイトのコードと突き合わせて判断するための材料を出す CLI",
   "bin": {
-    "ops": "./dist/cli.js"
+    "site-ops": "./dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20.18.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
-    "ops": "tsx src/cli.ts",
-    "ops:collect": "tsx src/cli.ts collect",
-    "ops:report": "tsx src/cli.ts report",
-    "ops:run": "tsx src/cli.ts run",
-    "ops:sites": "tsx src/cli.ts sites"
+    "ops": "node --env-file-if-exists=.env --import tsx src/cli.ts"
   },
   "dependencies": {
     "commander": "^12.1.0",

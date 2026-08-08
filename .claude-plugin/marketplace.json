@@ -1,0 +1,27 @@
+{
+  "name": "site-ops-ai",
+  "owner": {
+    "name": "nisioka",
+    "url": "https://github.com/nisioka"
+  },
+  "metadata": {
+    "description": "GA4 + Search Console を材料にサイト改善を判断するスキルと収集 CLI",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "site-ops",
+      "source": "./",
+      "description": "計測データとコードを突き合わせ、PR / Issue / 何もしない を判断する週次サイト診断",
+      "version": "0.2.0",
+      "author": {
+        "name": "nisioka",
+        "url": "https://github.com/nisioka"
+      },
+      "homepage": "https://github.com/nisioka/site-ops-ai",
+      "repository": "https://github.com/nisioka/site-ops-ai",
+      "license": "MIT",
+      "keywords": ["ga4", "search-console", "seo", "analytics", "routine"]
+    }
+  ]
+}

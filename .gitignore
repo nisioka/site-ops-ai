@@ -1,8 +1,14 @@
 node_modules/
 dist/
-.data/
 .env
 *.log
+
+# スナップショットは各サイトのリポジトリ側 (.site-ops/) に残す。
+# このリポジトリで動作確認したときの出力は追跡しない
+.site-ops/
+
+# 旧構成(中央集約)で収集したスナップショット。各サイトの .site-ops/ へ移すまで残置
+.data/
 
 # サービスアカウント鍵は絶対にコミットしない
 service-account*.json

@@ -22,7 +22,8 @@ const CORE_METRICS = [
   { name: "sessions" },
   { name: "engagedSessions" },
   { name: "engagementRate" },
-  { name: "conversions" },
+  // GA4 の conversions は非推奨。後継の keyEvents(キーイベント)を使う
+  { name: "keyEvents" },
   { name: "totalUsers" },
 ];
 
@@ -33,7 +34,7 @@ export interface Ga4Result {
     path: string;
     sessions: number;
     engagementRate: number;
-    conversions: number;
+    keyEvents: number;
   }>;
 }
 
@@ -59,15 +60,21 @@ export async function collectGa4(
         },
       ],
       metrics: CORE_METRICS,
-      // dateRange 名で行が分かれる
-      dimensions: [{ name: "dateRange" }],
+      // dateRanges を複数指定すると dateRange ディメンションが自動付与され、
+      // 各 dateRange の name で行が分かれる(dimensions に明示列挙するとエラーになる)
     },
   });
 
   const headers = totalsRes.data.metricHeaders ?? undefined;
   const rows = totalsRes.data.rows ?? [];
-  const currentRow = rows.find((r) => r.dimensionValues?.[0]?.value === "current");
-  const previousRow = rows.find((r) => r.dimensionValues?.[0]?.value === "previous");
+  const dateRangeIdx =
+    totalsRes.data.dimensionHeaders?.findIndex((h) => h.name === "dateRange") ?? -1;
+  const rowOf = (name: string) =>
+    dateRangeIdx < 0
+      ? undefined
+      : rows.find((r) => r.dimensionValues?.[dateRangeIdx]?.value === name);
+  const currentRow = rowOf("current");
+  const previousRow = rowOf("previous");
 
   // 流入上位ページ(現在期間)
   const pagesRes = await analyticsdata.properties.runReport({
@@ -76,7 +83,7 @@ export async function collectGa4(
     requestBody: {
       dateRanges: [{ startDate: periods.period.start, endDate: periods.period.end }],
       dimensions: [{ name: "pagePath" }],
-      metrics: [{ name: "sessions" }, { name: "engagementRate" }, { name: "conversions" }],
+      metrics: [{ name: "sessions" }, { name: "engagementRate" }, { name: "keyEvents" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: "20",
     },
@@ -86,7 +93,7 @@ export async function collectGa4(
     path: r.dimensionValues?.[0]?.value ?? "(unknown)",
     sessions: Number(r.metricValues?.[0]?.value ?? 0),
     engagementRate: Number(r.metricValues?.[1]?.value ?? 0),
-    conversions: Number(r.metricValues?.[2]?.value ?? 0),
+    keyEvents: Number(r.metricValues?.[2]?.value ?? 0),
   }));
 
   return {
