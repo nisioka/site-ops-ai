@@ -1,34 +1,36 @@
-import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join, basename } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync, existsSync } from "node:fs";
+import { join, isAbsolute, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { SiteConfigSchema, type SiteConfig } from "./types.js";
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
-export const SITES_DIR = join(ROOT, "sites");
-export const DATA_DIR = join(ROOT, ".data");
+/** サイト設定の既定パス(サイトリポジトリからの相対) */
+export const CONFIG_PATH = join(".claude", "site-ops.yml");
+/** スナップショットの保存先(サイトリポジトリからの相対) */
+export const SNAPSHOT_DIR = ".site-ops";
 
-export interface LoadedSite {
-  /** ファイル名から拡張子と先頭アンダースコアを除いた ID (例: site-a) */
-  id: string;
-  config: SiteConfig;
-}
+/**
+ * サイト設定を読み込む。カレントディレクトリ = 対象サイトのリポジトリ。
+ * @param configPath 明示指定(省略時は .claude/site-ops.yml)
+ * @param cwd 基準ディレクトリ(既定はプロセスの CWD)
+ */
+export function loadSiteConfig(configPath?: string, cwd = process.cwd()): SiteConfig {
+  const path = configPath
+    ? isAbsolute(configPath)
+      ? configPath
+      : resolve(cwd, configPath)
+    : resolve(cwd, CONFIG_PATH);
 
-/** sites/<id>.yml を1件読み込み・検証する */
-export function loadSite(id: string): LoadedSite {
-  const path = join(SITES_DIR, `${id}.yml`);
   if (!existsSync(path)) {
-    throw new Error(`サイト設定が見つかりません: ${path}`);
+    throw new Error(
+      `サイト設定が見つかりません: ${path}\n` +
+        `対象サイトのリポジトリ直下で実行し、${CONFIG_PATH} を用意してください。`,
+    );
   }
   const raw = parseYaml(readFileSync(path, "utf8"));
-  const config = SiteConfigSchema.parse(raw);
-  return { id, config };
+  return SiteConfigSchema.parse(raw);
 }
 
-/** sites/ 配下の全サイト(先頭 _ のテンプレは除外)を読み込む */
-export function loadAllSites(): LoadedSite[] {
-  if (!existsSync(SITES_DIR)) return [];
-  return readdirSync(SITES_DIR)
-    .filter((f) => f.endsWith(".yml") && !basename(f).startsWith("_"))
-    .map((f) => loadSite(basename(f, ".yml")));
+/** スナップショット保存ディレクトリの絶対パス */
+export function snapshotDir(cwd = process.cwd()): string {
+  return resolve(cwd, SNAPSHOT_DIR);
 }

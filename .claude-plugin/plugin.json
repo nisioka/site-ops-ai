@@ -1,0 +1,13 @@
+{
+  "name": "site-ops",
+  "version": "0.2.0",
+  "description": "GA4 + Search Console の計測データを収集し、サイトのコードと突き合わせて改善を判断する。直せるものは PR、判断が要るものは Issue、必要なければ何もしない",
+  "author": {
+    "name": "nisioka",
+    "url": "https://github.com/nisioka"
+  },
+  "homepage": "https://github.com/nisioka/site-ops-ai",
+  "repository": "https://github.com/nisioka/site-ops-ai",
+  "license": "MIT",
+  "keywords": ["ga4", "search-console", "seo", "site-ops", "analytics", "routine"]
+}
