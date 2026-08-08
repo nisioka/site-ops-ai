@@ -1,0 +1,31 @@
+{
+  "name": "site-ops-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GA4 + Search Console のデータを収集し、AI が修正提案を出す運用ツール（複数サイト汎用）",
+  "bin": {
+    "ops": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "ops": "tsx src/cli.ts",
+    "ops:collect": "tsx src/cli.ts collect",
+    "ops:report": "tsx src/cli.ts report",
+    "ops:run": "tsx src/cli.ts run",
+    "ops:sites": "tsx src/cli.ts sites"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "googleapis": "^144.0.0",
+    "yaml": "^2.6.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.6.0"
+}

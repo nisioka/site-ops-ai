@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.data/
+.env
+*.log
+
+# サービスアカウント鍵は絶対にコミットしない
+service-account*.json
+*-credentials.json
+gcp-key*.json
