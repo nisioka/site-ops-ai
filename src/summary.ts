@@ -135,6 +135,26 @@ export function buildSummary(snap: Snapshot): Summary {
 // Markdown 整形(標準出力・PR/Issue への貼り付け用)
 // ============================================================
 
+/**
+ * 外部由来の文字列を Markdown の表セルに入れられる形へ整える。
+ *
+ * 検索クエリとページ URL は第三者が任意に作れる（そのクエリで検索して自サイトを
+ * 表示させればよい）。この出力は PR / Issue の本文になり、AI も読む。
+ * 素通しにすると表崩れ・HTML 混入・指示文の混入を許すため、構造を壊す文字を無害化する。
+ */
+const CELL_MAX = 200;
+
+function cell(value: string): string {
+  const escaped = value
+    .replace(/[\r\n]+/g, " ") // 改行は行区切りとして解釈されるため潰す
+    .replace(/\\/g, "\\\\")
+    .replace(/\|/g, "\\|") // セル区切りを壊さない
+    .replace(/[`*_[\]]/g, (c) => `\\${c}`) // コード/強調/リンク記法を無効化
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped.length > CELL_MAX ? `${escaped.slice(0, CELL_MAX)}…` : escaped;
+}
+
 function pct(v: number | null): string {
   return v === null ? "—" : `${v > 0 ? "+" : ""}${v}%`;
 }
@@ -146,7 +166,7 @@ function signed(v: number | null): string {
 /** @param context サイトの前提(site-ops.yml の context)。あれば冒頭に差し込む */
 export function renderSummary(summary: Summary, context?: string): string {
   const L: string[] = [];
-  L.push(`# ${summary.site} サイト計測サマリ`);
+  L.push(`# ${cell(summary.site)} サイト計測サマリ`);
   L.push("");
   L.push(
     `- 対象期間: ${summary.period.start} 〜 ${summary.period.end}` +
@@ -183,7 +203,7 @@ export function renderSummary(summary: Summary, context?: string): string {
     L.push("| --- | ---: | ---: | ---: | ---: | ---: | ---: |");
     for (const p of summary.pages) {
       L.push(
-        `| ${p.page} | ${p.clicks} | ${p.impressions} | ${p.ctrPct} | ${p.position} | ` +
+        `| ${cell(p.page)} | ${p.clicks} | ${p.impressions} | ${p.ctrPct} | ${p.position} | ` +
           `${p.previousPosition ?? "—"} | ${signed(p.positionDelta)} |`,
       );
     }
@@ -200,7 +220,9 @@ export function renderSummary(summary: Summary, context?: string): string {
     L.push("| クエリ | クリック | 表示 | CTR% | 掲載順位 |");
     L.push("| --- | ---: | ---: | ---: | ---: |");
     for (const q of summary.queries) {
-      L.push(`| ${q.query} | ${q.clicks} | ${q.impressions} | ${q.ctrPct} | ${q.position} |`);
+      L.push(
+        `| ${cell(q.query)} | ${q.clicks} | ${q.impressions} | ${q.ctrPct} | ${q.position} |`,
+      );
     }
   }
   L.push("");
@@ -214,7 +236,7 @@ export function renderSummary(summary: Summary, context?: string): string {
     L.push("| --- | ---: | ---: | ---: |");
     for (const p of summary.landingPages) {
       L.push(
-        `| ${p.path} | ${p.sessions} | ${round(p.engagementRate * 100)}% | ${p.keyEvents} |`,
+        `| ${cell(p.path)} | ${p.sessions} | ${round(p.engagementRate * 100)}% | ${p.keyEvents} |`,
       );
     }
   }
@@ -226,14 +248,14 @@ export function renderSummary(summary: Summary, context?: string): string {
     L.push("未取得（PSI_API_KEY 未設定）。");
   } else if (summary.cwv.lcp === null && summary.cwv.inp === null && summary.cwv.cls === null) {
     L.push(
-      `フィールドデータなし（source: ${summary.cwv.source}）。` +
+      `フィールドデータなし（source: ${cell(summary.cwv.source)}）。` +
         "実ユーザーのトラフィックが CrUX の閾値に満たない場合、値は返らない。",
     );
   } else {
     L.push(`- LCP: ${summary.cwv.lcp ?? "—"} ms（基準 2500 以下）`);
     L.push(`- INP: ${summary.cwv.inp ?? "—"} ms（基準 200 以下）`);
     L.push(`- CLS: ${summary.cwv.cls ?? "—"}（PSI は 100 倍値。基準 10 以下）`);
-    L.push(`- source: ${summary.cwv.source}`);
+    L.push(`- source: ${cell(summary.cwv.source)}`);
   }
   L.push("");
   return L.join("\n");

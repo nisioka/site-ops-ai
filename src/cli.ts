@@ -20,6 +20,15 @@ interface OutputOpts {
   json?: boolean;
 }
 
+/** 数値オプションを 1 以上の整数として検証する */
+function positiveInt(value: string, label: string): number {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`${label} は 1 以上の整数で指定してください: ${value}`);
+  }
+  return n;
+}
+
 /** 要約を標準出力またはファイルへ書き出す */
 function emit(snap: Snapshot, opts: OutputOpts, context?: string): void {
   const summary = buildSummary(snap);
@@ -44,11 +53,7 @@ program
   .option("--json", "要約を JSON で出力")
   .action(async (opts: OutputOpts & { window: string }) => {
     const config = loadSiteConfig(opts.config);
-    const windowDays = Number(opts.window);
-    if (!Number.isFinite(windowDays) || windowDays < 1) {
-      throw new Error(`--window は 1 以上の数値で指定してください: ${opts.window}`);
-    }
-    const snap = await collectSite(config, windowDays);
+    const snap = await collectSite(config, positiveInt(opts.window, "--window"));
     console.error(
       `収集完了: ${snap.period.start}〜${snap.period.end} → ${SNAPSHOT_DIR}/${snap.collectedAt.slice(0, 10)}.json`,
     );
@@ -82,7 +87,7 @@ program
   .description("保存済みスナップショットの推移を出力(トレンド判断用)")
   .option("--limit <n>", "読み込む件数", "8")
   .action((opts: { limit: string }) => {
-    const snaps = loadSnapshots(Number(opts.limit) || 8).reverse();
+    const snaps = loadSnapshots(positiveInt(opts.limit, "--limit")).reverse();
     if (snaps.length === 0) {
       throw new Error(`${SNAPSHOT_DIR}/ にスナップショットがありません。`);
     }

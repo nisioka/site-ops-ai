@@ -24,7 +24,7 @@ CLI は数値を並べるところまでを担い、深刻度と打ち手の判�
 
 ## 全体像
 
-```
+```text
 各サイトのリポジトリ/                     このリポジトリ
 ├── .claude/
 │   ├── site-ops.yml    ← サイト固有の設定    site-ops.example.yml
@@ -33,7 +33,7 @@ CLI は数値を並べるところまでを担い、深刻度と打ち手の判�
 │   └── 2026-08-08.json ← スナップショット(コミットする)
 └── src/ ...            ← 診断対象のコード
                             ↑
-        npx -y github:nisioka/site-ops-ai collect  で収集
+     npx -y github:nisioka/site-ops-ai#v0.2.0 collect で収集
 ```
 
 ## セットアップ
@@ -66,12 +66,32 @@ context: |
 `context` は AI の判断材料になる。数値だけでは打ち手が決まらないので、ここを書くかどうかで
 提案の質が変わる。
 
-### 3. スキルを配置
+### 3. スナップショットの公開範囲を決める
+
+`.site-ops/<date>.json` には**検索クエリの文字列・ページ別の流入数・掲載順位**が入る。
+これをコミットするかどうかは、リポジトリの公開設定で分ける。
+
+| リポジトリ | 方針 |
+| --- | --- |
+| private | コミットする。履歴がトレンド判断の材料になる |
+| **public** | **コミットしない。** `.gitignore` に `.site-ops/` を追加する |
+
+public リポジトリにコミットすると、どんな検索語で流入しているか、各ページに何人来ているかが
+そのまま公開される。事業判断の材料を第三者に渡すことになるので、既定では避ける。
+公開しても構わないと判断した場合のみコミットする。
+
+public リポジトリでは履歴が残らないため `history` によるトレンド判断ができない。
+単週のスナップショットだけで判断することになる点は許容する。
+
+**保持期間。** スナップショットは古くなるほど価値が下がる。判断に使うのは直近8週程度なので、
+それを超えたものは削除してよい。長期保存が必要なら GA4 / GSC 側を参照する。
+
+### 4. スキルを配置
 
 プラグインとして入れるか、`skills/site-ops/SKILL.md` を
 `<サイトのリポジトリ>/.claude/skills/site-ops/SKILL.md` にコピーする。
 
-### 4. 定期実行
+### 5. 定期実行
 
 クラウドでのスケジュール実行の手順は [`routine/README.md`](./routine/README.md) を参照。
 
@@ -81,14 +101,30 @@ context: |
 スナップショットは `.site-ops/<date>.json` に保存される。
 
 ```bash
-npx -y github:nisioka/site-ops-ai collect            # 収集して保存し、要約を出力
-npx -y github:nisioka/site-ops-ai collect --json     # 要約を JSON で
-npx -y github:nisioka/site-ops-ai collect --window 28  # 期間長を変える(既定7日)
-npx -y github:nisioka/site-ops-ai summary            # 保存済みから再出力(取得しない)
-npx -y github:nisioka/site-ops-ai history            # 数週分の推移(トレンド判断用)
+npx -y github:nisioka/site-ops-ai#v0.2.0 collect              # 収集して保存し、要約を出力
+npx -y github:nisioka/site-ops-ai#v0.2.0 collect --json       # 要約を JSON で
+npx -y github:nisioka/site-ops-ai#v0.2.0 collect --window 28  # 期間長を変える(既定7日)
+npx -y github:nisioka/site-ops-ai#v0.2.0 summary              # 保存済みから再出力(取得しない)
+npx -y github:nisioka/site-ops-ai#v0.2.0 history              # 数週分の推移(トレンド判断用)
 ```
 
 `--config <path>` で設定ファイルの場所を変えられる。
+
+**バージョンは必ず固定する。** `#v0.2.0` を省略すると既定ブランチの HEAD が実行される。
+無人のルーティンが、その時点の master にあるコードを取ってきて動くことになり、
+何が実行されたかを後から特定できない。
+
+### リリース手順
+
+このリポジトリ側で変更を入れたら、タグを打ってから各サイトの参照を上げる。
+
+```bash
+# package.json の version を上げてマージしたあと
+git tag v0.3.0 && git push origin v0.3.0
+```
+
+各サイトリポジトリの `.claude/skills/site-ops/SKILL.md` にある `#v0.2.0` を新しいタグへ
+書き換える。タグを打つまで、そのバージョンは `npx` から参照できない。
 
 ### 認証情報
 

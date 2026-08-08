@@ -59,7 +59,11 @@ function reason(r: PromiseRejectedResult): string {
   return r.reason instanceof Error ? r.reason.message : String(r.reason);
 }
 
-/** 保存済みスナップショットを新しい順に読み込む(壊れたファイルは読み飛ばす) */
+/**
+ * 保存済みスナップショットを新しい順に読み込む。
+ * limit は「読めたスナップショットの件数」に対して適用する
+ * (先に件数で切ると、壊れたファイルがあったぶんだけ結果が減ってしまう)。
+ */
 export function loadSnapshots(limit = 1): Snapshot[] {
   const dir = snapshotDir();
   if (!existsSync(dir)) return [];
@@ -67,11 +71,11 @@ export function loadSnapshots(limit = 1): Snapshot[] {
   const files = readdirSync(dir)
     .filter((f) => f.endsWith(".json"))
     .sort()
-    .reverse()
-    .slice(0, limit);
+    .reverse();
 
   const out: Snapshot[] = [];
   for (const f of files) {
+    if (out.length >= limit) break;
     try {
       out.push(SnapshotSchema.parse(JSON.parse(readFileSync(join(dir, f), "utf8"))));
     } catch (e) {

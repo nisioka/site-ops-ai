@@ -8,7 +8,7 @@
     "site-ops": "./dist/cli.js"
   },
   "engines": {
-    "node": ">=20.12"
+    "node": ">=20.18.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
