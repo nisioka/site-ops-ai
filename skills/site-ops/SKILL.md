@@ -25,7 +25,7 @@ description: GA4 と Search Console の計測データを収集し、サイト�
 ### 1. 収集
 
 ```bash
-npx -y github:nisioka/site-ops-ai#v0.2.0 collect
+pnpm site-ops collect
 ```
 
 `.site-ops/<date>.json` にスナップショットが保存され、要約が標準出力に出る。
@@ -33,7 +33,7 @@ npx -y github:nisioka/site-ops-ai#v0.2.0 collect
 履歴が無いのが正常）。
 
 ```bash
-npx -y github:nisioka/site-ops-ai#v0.2.0 history
+pnpm site-ops history
 ```
 
 `#v0.2.0` のバージョン指定は外さない。省略すると既定ブランチの HEAD が実行され、
