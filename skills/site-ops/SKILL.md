@@ -37,8 +37,8 @@ pnpm site-ops collect
 pnpm site-ops history
 ```
 
-`pnpm site-ops` は、このリポジトリに取り込んだ収集 CLI（`scripts/site-ops/`）を実行する。
-スクリプトが無い場合は、その旨を報告して終わる。`npx -y github:nisioka/site-ops-ai` で
+上の `pnpm site-ops collect` / `pnpm site-ops history` は、このリポジトリに取り込んだ
+収集 CLI（`scripts/site-ops/`）を実行する。`package.json` に `site-ops` スクリプトが無い場合は、その旨を報告して終わる。`npx -y github:nisioka/site-ops-ai` で
 代わりに実行しない。無人のスケジュール実行では外部コードの実行として拒否されるうえ、
 何が動いたかをリポジトリから追えなくなる。
 

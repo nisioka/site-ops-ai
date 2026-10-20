@@ -94,10 +94,17 @@ public リポジトリでは履歴が残らないため `history` によるト�
 ```bash
 # サイトのリポジトリ直下で(site-ops-ai は取り込むタグを checkout しておく)
 mkdir -p scripts/site-ops
-cp -r ../site-ops-ai/src/. scripts/site-ops/
-pnpm add commander googleapis yaml zod
-pnpm add -D tsx
+rsync -a --delete ../site-ops-ai/src/ scripts/site-ops/
+pnpm add commander@^12.1.0 googleapis@^144.0.0 yaml@^2.6.1 zod@^3.24.1
+pnpm add -D tsx@^4.19.2
 ```
+
+`rsync --delete` にしているのは、取り込み直したときにタグ側で消えたファイルを残さないため。
+`cp -r` では古いファイルが残り、タグの `src/` と一致しなくなる。
+
+依存のバージョン範囲は、このリポジトリの `package.json` で動作を確かめた範囲に合わせる。
+サイト側ですでに入っているパッケージ（zod 4 など）は、そのバージョンのままでよい。
+更新された `package.json` と `pnpm-lock.yaml` はサイト側でコミットする。
 
 ```jsonc
 // package.json
@@ -108,8 +115,8 @@ pnpm add -D tsx
 
 `npx -y github:nisioka/site-ops-ai#v0.2.0` で直接実行する方式はやめた。無人のスケジュール
 実行では、取得したコードの実行が「外部コードの実行」として auto mode に拒否され、診断が
-走らない。取り込んでおけば、実行されるコードはリポジトリにコミットされたものに限られ、
-何が動いたかも履歴から特定できる。
+走らない。取り込んでおけば CLI のソースはリポジトリで管理され、何が動いたかも履歴から
+特定できる。依存パッケージのバージョンは、サイト側の `package.json` と `pnpm-lock.yaml` で管理する。
 
 サイト側が zod 4 でもそのまま動く（`z.record` はキーと値の2引数で書いている）。
 import の `.js` 拡張子は tsx が `.ts` に解決するので、書き換えなくてよい。
@@ -147,8 +154,8 @@ pnpm site-ops history              # 数週分の推移(トレンド判断用)
 git tag v0.3.0 && git push origin v0.3.0
 ```
 
-各サイトリポジトリで、そのタグの `src/` を `scripts/site-ops/` へコピーし直す
-（[セットアップの4](#4-収集-cli-を取り込む)と同じ手順）。コミットメッセージには取り込んだ
+各サイトリポジトリで、そのタグの `src/` を `scripts/site-ops/` へ `rsync -a --delete` で
+同期し直す（[セットアップの4](#4-収集-cli-を取り込む)と同じ手順）。コミットメッセージには取り込んだ
 タグを書き、どのバージョンが動いているかを履歴から追えるようにする。
 
 ### 認証情報
