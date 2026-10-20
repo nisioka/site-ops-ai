@@ -15,6 +15,11 @@ Claude のスケジュール実行（クラウドエージェント）を、対�
 
 - `.claude/site-ops.yml`（サイト設定）
 - `.claude/skills/site-ops/SKILL.md`（スキル。プラグインで入れる場合は不要）
+- `scripts/site-ops/` と `package.json` の `site-ops` スクリプト（収集 CLI。
+  [README の「収集 CLI を取り込む」](../README.md#4-収集-cli-を取り込む)を参照）
+
+収集 CLI を `npx -y github:...` で取ってくる形にはしない。無人実行では外部コードの実行として
+拒否され、診断が走らない。
 
 ### 実行環境の Secret
 
@@ -58,7 +63,7 @@ site-ops スキルに従って週次のサイト診断を実行してくださ�
 
 ## 段階導入
 
-1. まず手元で `npx -y github:nisioka/site-ops-ai#v0.2.0 collect` を実行し、要約の内容を確認する
+1. まず手元で `pnpm site-ops collect` を実行し、要約の内容を確認する
 2. 1リポジトリだけスケジュール登録し、数週間ぶんの PR / Issue の質を見る
 3. 問題なければ残りのリポジトリへ広げる
 
