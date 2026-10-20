@@ -31,9 +31,10 @@ CLI は数値を並べるところまでを担い、深刻度と打ち手の判�
 │   └── skills/site-ops/ ← スキル(コピー or プラグイン)  skills/site-ops/
 ├── .site-ops/
 │   └── 2026-08-08.json ← スナップショット(コミットする)
+├── scripts/site-ops/   ← 収集 CLI(取り込み)  src/
 └── src/ ...            ← 診断対象のコード
                             ↑
-     npx -y github:nisioka/site-ops-ai#v0.2.0 collect で収集
+               pnpm site-ops collect で収集
 ```
 
 ## セットアップ
@@ -86,12 +87,39 @@ public リポジトリでは履歴が残らないため `history` によるト�
 **保持期間。** スナップショットは古くなるほど価値が下がる。判断に使うのは直近8週程度なので、
 それを超えたものは削除してよい。長期保存が必要なら GA4 / GSC 側を参照する。
 
-### 4. スキルを配置
+### 4. 収集 CLI を取り込む
+
+`src/` 以下を `<サイトのリポジトリ>/scripts/site-ops/` にコピーし、依存とスクリプトを足す。
+
+```bash
+# サイトのリポジトリ直下で(site-ops-ai は取り込むタグを checkout しておく)
+mkdir -p scripts/site-ops
+cp -r ../site-ops-ai/src/. scripts/site-ops/
+pnpm add commander googleapis yaml zod
+pnpm add -D tsx
+```
+
+```jsonc
+// package.json
+"scripts": {
+  "site-ops": "tsx --env-file-if-exists=.env scripts/site-ops/cli.ts"
+}
+```
+
+`npx -y github:nisioka/site-ops-ai#v0.2.0` で直接実行する方式はやめた。無人のスケジュール
+実行では、取得したコードの実行が「外部コードの実行」として auto mode に拒否され、診断が
+走らない。取り込んでおけば、実行されるコードはリポジトリにコミットされたものに限られ、
+何が動いたかも履歴から特定できる。
+
+サイト側が zod 4 でもそのまま動く（`z.record` はキーと値の2引数で書いている）。
+import の `.js` 拡張子は tsx が `.ts` に解決するので、書き換えなくてよい。
+
+### 5. スキルを配置
 
 プラグインとして入れるか、`skills/site-ops/SKILL.md` を
 `<サイトのリポジトリ>/.claude/skills/site-ops/SKILL.md` にコピーする。
 
-### 5. 定期実行
+### 6. 定期実行
 
 クラウドでのスケジュール実行の手順は [`routine/README.md`](./routine/README.md) を参照。
 
@@ -101,30 +129,27 @@ public リポジトリでは履歴が残らないため `history` によるト�
 スナップショットは `.site-ops/<date>.json` に保存される。
 
 ```bash
-npx -y github:nisioka/site-ops-ai#v0.2.0 collect              # 収集して保存し、要約を出力
-npx -y github:nisioka/site-ops-ai#v0.2.0 collect --json       # 要約を JSON で
-npx -y github:nisioka/site-ops-ai#v0.2.0 collect --window 28  # 期間長を変える(既定7日)
-npx -y github:nisioka/site-ops-ai#v0.2.0 summary              # 保存済みから再出力(取得しない)
-npx -y github:nisioka/site-ops-ai#v0.2.0 history              # 数週分の推移(トレンド判断用)
+pnpm site-ops collect              # 収集して保存し、要約を出力
+pnpm site-ops collect --json       # 要約を JSON で
+pnpm site-ops collect --window 28  # 期間長を変える(既定7日)
+pnpm site-ops summary              # 保存済みから再出力(取得しない)
+pnpm site-ops history              # 数週分の推移(トレンド判断用)
 ```
 
 `--config <path>` で設定ファイルの場所を変えられる。
 
-**バージョンは必ず固定する。** `#v0.2.0` を省略すると既定ブランチの HEAD が実行される。
-無人のルーティンが、その時点の master にあるコードを取ってきて動くことになり、
-何が実行されたかを後から特定できない。
-
 ### リリース手順
 
-このリポジトリ側で変更を入れたら、タグを打ってから各サイトの参照を上げる。
+このリポジトリ側で変更を入れたら、タグを打ってから各サイトへ取り込み直す。
 
 ```bash
 # package.json の version を上げてマージしたあと
 git tag v0.3.0 && git push origin v0.3.0
 ```
 
-各サイトリポジトリの `.claude/skills/site-ops/SKILL.md` にある `#v0.2.0` を新しいタグへ
-書き換える。タグを打つまで、そのバージョンは `npx` から参照できない。
+各サイトリポジトリで、そのタグの `src/` を `scripts/site-ops/` へコピーし直す
+（[セットアップの4](#4-収集-cli-を取り込む)と同じ手順）。コミットメッセージには取り込んだ
+タグを書き、どのバージョンが動いているかを履歴から追えるようにする。
 
 ### 認証情報
 

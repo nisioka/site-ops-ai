@@ -67,8 +67,8 @@ export const SnapshotSchema = z.object({
   period: z.object({ start: z.string(), end: z.string() }),
   previousPeriod: z.object({ start: z.string(), end: z.string() }),
   ga4: z.object({
-    totals: z.record(z.number()),
-    previousTotals: z.record(z.number()),
+    totals: z.record(z.string(), z.number()),
+    previousTotals: z.record(z.string(), z.number()),
     topPages: z.array(TopPageSchema),
   }),
   gsc: z.object({

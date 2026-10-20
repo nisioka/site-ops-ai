@@ -15,6 +15,7 @@ description: GA4 と Search Console の計測データを収集し、サイト�
 
 - カレントディレクトリが対象サイトのリポジトリであること
 - `.claude/site-ops.yml` があること（GA4 プロパティ ID / GSC プロパティ / サイトの前提）
+- `package.json` に `site-ops` スクリプトがあること（収集 CLI を `scripts/site-ops/` に取り込み済み）
 - 環境変数 `GOOGLE_SERVICE_ACCOUNT_JSON`（クラウド実行）または
   `GOOGLE_APPLICATION_CREDENTIALS`（ローカル実行）が設定されていること
 
@@ -36,8 +37,10 @@ pnpm site-ops collect
 pnpm site-ops history
 ```
 
-`#v0.2.0` のバージョン指定は外さない。省略すると既定ブランチの HEAD が実行され、
-何が動いたかを後から特定できなくなる。
+`pnpm site-ops` は、このリポジトリに取り込んだ収集 CLI（`scripts/site-ops/`）を実行する。
+スクリプトが無い場合は、その旨を報告して終わる。`npx -y github:nisioka/site-ops-ai` で
+代わりに実行しない。無人のスケジュール実行では外部コードの実行として拒否されるうえ、
+何が動いたかをリポジトリから追えなくなる。
 
 ### 2. 数値を読む
 
